@@ -1,7 +1,7 @@
 import datetime as dt
 import numpy as np
 from scipy.ndimage import shift
-
+from scipy import signal, optimize, interpolate
 
 class srh_mapname_ANF:
     def __init__(self, filename, homepath = ''):
@@ -80,6 +80,23 @@ def find_min_deviation(map_base, map_curr, delta_shift):
                 elif sum_shift(best_delta) <= 0.5:
                     k = 0.1
 
-                # print(best_delta)
-
     return best_delta, minimum
+
+def find_min_deviation_with_correlation(map_base, map_curr):
+    x = np.arange(0, map_base.shape[1])
+    y = np.arange(0, map_base.shape[0])
+
+    cross_corr = signal.correlate2d(map_base, map_curr, mode="same")
+    cross_corr_spline = interpolate.RectBivariateSpline(y, x, -cross_corr)
+
+    def thefunc(vals):
+        y, x = vals
+        return cross_corr_spline(x, y)
+
+    max_y, max_x = optimize.fmin(thefunc, np.array([map_base.shape[0]//2,map_base.shape[1] // 2]))
+    max_val = cross_corr_spline(max_x, max_y)
+
+    shift_x = max_y - map_base.shape[1] // 2
+    shift_y = max_x - map_base.shape[0] // 2
+
+    return [shift_y, shift_x], -max_val
