@@ -99,4 +99,4 @@ def find_min_deviation_with_correlation(map_base, map_curr):
     shift_x = max_y - map_base.shape[1] // 2
     shift_y = max_x - map_base.shape[0] // 2
 
-    return [shift_y, shift_x], -max_val
+    return [np.round(shift_y, 5), np.round(shift_x, 5)], -max_val
